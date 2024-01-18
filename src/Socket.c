@@ -1,13 +1,18 @@
 #include "in.h"
 
-int emit = 1;
-
-// 数据结构来存储客户端信息
 typedef struct client_info {
     SOCKET clnt_sock;
     struct sockaddr_in clnt_addr;
     int clnt_addr_len;
 } client_info;
+
+int Handle(client_info *client, short* D){
+    // https://wiki.vg/Protocol
+
+    
+}
+
+int emit = 1;
 
 void Close(client_info *client){
 	closesocket(client->clnt_sock);
@@ -15,7 +20,7 @@ void Close(client_info *client){
 }
 
 void Send(client_info *client, const short *response){ // 格式： client / Recv
-	send(client->clnt_sock, response, strlen(response), 0);
+	send(client->clnt_sock, (char *)response, strlen((char *)response), 0);
 }
 
 // 线程回调函数
@@ -23,9 +28,7 @@ DWORD WINAPI process_client(LPVOID arg) {
     client_info *client = (client_info *)arg;
 	while (emit){
 		short buffer[1024];
-		if (recv(client->clnt_sock, buffer, sizeof(buffer), 0)) {
-			Send(client,"114514");
-		}
+		recv(client->clnt_sock, (char *)buffer, sizeof(buffer), 0) && Handle(client,buffer);
 		memset(buffer,0,1024);
 	}
 	Close(client);
@@ -35,7 +38,7 @@ DWORD WINAPI process_client(LPVOID arg) {
 int Server(int port) {
     Logger("Server");
     WSADATA wsa_data;
-    if (WSAStartup(MAKEWORD(2, 2), &wsa_data) != 0) {
+    if (!WSAStartup(MAKEWORD(2, 2), &wsa_data)) {
         perror("WSAStartup failed");
         exit(EXIT_FAILURE);
     }
@@ -50,7 +53,7 @@ int Server(int port) {
 
     // 设置套接字选项以允许重复绑定
     int optval = 1;
-    setsockopt(serv_sock, SOL_SOCKET, SO_REUSEADDR, (const short *)&optval, sizeof(optval));
+    setsockopt(serv_sock, SOL_SOCKET, SO_REUSEADDR, (const char *)&optval, sizeof(optval));
 
     // 将套接字和 IP、端口绑定
     struct sockaddr_in serv_addr;
@@ -76,7 +79,7 @@ int Server(int port) {
 
     char t[6];
     snprintf(t,6,"%d",port);
-    Info(And("Server is listening on port ",t));
+    Info(cAnd("Server is listening on port ",t));
 
     HANDLE client_threads[MAX_CONNECTIONS];
     DWORD thread_ids[MAX_CONNECTIONS];

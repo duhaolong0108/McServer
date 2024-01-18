@@ -1,3 +1,5 @@
+:: encoding GBK
+
 @echo off
 echo 获取输入的文件路径
 set /p var=文件路径：
