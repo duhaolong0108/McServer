@@ -16,16 +16,15 @@ void Puts(FILE *F, unsigned char *D)
     fputs(D, F);
 }
 
-char* Read(FILE *F)
+char *Read(FILE *F)
 {
-    fseek(F, 0, SEEK_END); 
+    fseek(F, 0, SEEK_END);
     long int fsize = ftell(F);
-    fseek(F, 0, SEEK_SET); 
+    fseek(F, 0, SEEK_SET);
 
-    char* data = (char*)malloc(fsize + 1); 
+    char *data = (char *)malloc(fsize + 1);
     fread(data, 1, fsize, F);
-    data[fsize] = '\0'; 
+    data[fsize] = '\0';
 
     return data;
 }
-

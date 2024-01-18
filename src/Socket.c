@@ -1,54 +1,61 @@
 #include "in.h"
 
-typedef struct client_info {
+typedef struct client_info
+{
     SOCKET clnt_sock;
     struct sockaddr_in clnt_addr;
     int clnt_addr_len;
 } client_info;
 
-int Handle(client_info *client, short* D){
+int Handle(client_info *client, short *D)
+{
     // https://wiki.vg/Protocol
-
-    
 }
 
 int emit = 1;
 
-void Close(client_info *client){
-	closesocket(client->clnt_sock);
+void Close(client_info *client)
+{
+    closesocket(client->clnt_sock);
     free(client);
 }
 
-void Send(client_info *client, const short *response){ // 格式： client / Recv
-	send(client->clnt_sock, (char *)response, strlen((char *)response), 0);
+void Send(client_info *client, const short *response)
+{ // 格式： client / Recv
+    send(client->clnt_sock, (char *)response, strlen((char *)response), 0);
 }
 
 // 线程回调函数
-DWORD WINAPI process_client(LPVOID arg) {
+DWORD WINAPI process_client(LPVOID arg)
+{
     client_info *client = (client_info *)arg;
-	while (emit){
-		short buffer[1024];
-		recv(client->clnt_sock, (char *)buffer, sizeof(buffer), 0) && Handle(client,buffer);
-		memset(buffer,0,1024);
-	}
-	Close(client);
+    while (emit)
+    {
+        short buffer[1024];
+        recv(client->clnt_sock, (char *)buffer, sizeof(buffer), 0) && Handle(client, buffer);
+        memset(buffer, 0, 1024);
+    }
+    Close(client);
     return 0;
 }
 
-int Server(int port) {
+int Server(int port)
+{
     Logger("Server");
     WSADATA wsa_data;
-    if (!WSAStartup(MAKEWORD(2, 2), &wsa_data)) {
-        perror("WSAStartup failed");
-        exit(EXIT_FAILURE);
+    if (!WSAStartup(MAKEWORD(2, 2), &wsa_data))
+    {
+        Error("WSAStartup failed");
+        return 1;
     }
 
     // 创建套接字
     SOCKET serv_sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (serv_sock == INVALID_SOCKET) {
-        perror("socket failed");
+    if (serv_sock == INVALID_SOCKET)
+    {
+        Error("socket failed");
         WSACleanup();
-        exit(EXIT_FAILURE);
+        return 1;
     }
 
     // 设置套接字选项以允许重复绑定
@@ -57,45 +64,49 @@ int Server(int port) {
 
     // 将套接字和 IP、端口绑定
     struct sockaddr_in serv_addr;
-    memset(&serv_addr, 0, sizeof(serv_addr));  // 每个字节都用0填充
-    serv_addr.sin_family = AF_INET;            // 使用 IPv4 地址
+    memset(&serv_addr, 0, sizeof(serv_addr));      // 每个字节都用0填充
+    serv_addr.sin_family = AF_INET;                // 使用 IPv4 地址
     serv_addr.sin_addr.s_addr = htonl(INADDR_ANY); // 允许任何 IP 地址连接
-    serv_addr.sin_port = htons(port);          // 端口
+    serv_addr.sin_port = htons(port);              // 端口
 
-    if (bind(serv_sock, (SOCKADDR *)&serv_addr, sizeof(serv_addr)) == SOCKET_ERROR) {
-        perror("bind failed");
+    if (bind(serv_sock, (SOCKADDR *)&serv_addr, sizeof(serv_addr)) == SOCKET_ERROR)
+    {
+        Error("bind failed");
         closesocket(serv_sock);
         WSACleanup();
-        exit(EXIT_FAILURE);
+        return 1;
     }
 
     // 进入监听状态，等待用户发起请求
-    if (listen(serv_sock, MAX_CONNECTIONS) == SOCKET_ERROR) {
-        perror("listen failed");
+    if (listen(serv_sock, MAX_CONNECTIONS) == SOCKET_ERROR)
+    {
+        Error("listen failed");
         closesocket(serv_sock);
         WSACleanup();
-        exit(EXIT_FAILURE);
+        return 1;
     }
 
     char t[6];
-    snprintf(t,6,"%d",port);
-    Info(cAnd("Server is listening on port ",t));
+    snprintf(t, 6, "%d", port);
+    Info(cAnd("Server is listening on port ", t));
 
     HANDLE client_threads[MAX_CONNECTIONS];
     DWORD thread_ids[MAX_CONNECTIONS];
-    int i=0;
+    int i = 0;
 
-    while (emit) {
+    while (emit)
+    {
         // 接收客户端请求
         struct sockaddr_in clnt_addr;
         int clnt_addr_len = sizeof(clnt_addr);
 
         SOCKET clnt_sock = accept(serv_sock, (SOCKADDR *)&clnt_addr, &clnt_addr_len);
-        if (clnt_sock == INVALID_SOCKET) {
-            perror("accept failed");
+        if (clnt_sock == INVALID_SOCKET)
+        {
+            Error("accept failed");
             continue;
         }
-		
+
         // 创建线程来处理客户端请求
         client_info *client = malloc(sizeof(client_info));
         client->clnt_sock = clnt_sock;
@@ -103,8 +114,9 @@ int Server(int port) {
         client->clnt_addr_len = clnt_addr_len;
 
         client_threads[i] = CreateThread(NULL, 0, process_client, client, 0, &thread_ids[i]);
-        if (!client_threads[i]) {
-            perror("CreateThread failed");
+        if (!client_threads[i])
+        {
+            Error("CreateThread failed");
             closesocket(clnt_sock);
             free(client);
             continue;
@@ -120,6 +132,7 @@ int Server(int port) {
     return 0;
 }
 
-void Stop(){
+void Stop()
+{
     emit = 0;
 }

@@ -1,8 +1,9 @@
-char* cAnd(char *A, char *B)
+char *cAnd(char *A, char *B)
 {
     short length = strlen(A) + strlen(B) + 1;
-    char* r = malloc(length);
-    if (r == NULL) { // 检查malloc是否成功
+    char *r = malloc(length);
+    if (r == NULL)
+    { // 检查malloc是否成功
         fprintf(stderr, "Memory allocation failed!\n");
         exit(1);
     }
@@ -14,9 +15,11 @@ char* cAnd(char *A, char *B)
 // Short 合并个鬼
 // 你tcp直接两个发送不好吗？
 
-short varcod(int num, unsigned short *out) {
+short varcod(int num, unsigned short *out)
+{
     short bytes = 0;
-    while (num & 128) {
+    while (num & 128)
+    {
         out[bytes++] = (num & 0xFF) | 128;
         num >>= 7;
     }
@@ -28,6 +31,7 @@ short varcod(int num, unsigned short *out) {
 short varLen(short *data)
 {
     short i = 0;
-    while(data[i++]>>7);
+    while (data[i++] >> 7)
+        ;
     return i;
 }
