@@ -11,7 +11,7 @@ if errorlevel 1 (
 )
 echo 切换到运行目录并执行生成的可执行文件
 cd run
-cls
+
 powershell ".\..\build\%var%.exe"
 echo 返回值 %errorlevel%
 cd ..

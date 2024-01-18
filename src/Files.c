@@ -1,26 +1,19 @@
-#include <stdio.h>
-#include <string.h> // Include string.h to use strlen()
-#include <stdlib.h> // Include stdlib.h to use malloc(), realloc() and free()
-
-#include "logger.c"
+#include "in.h"
 
 FILE *Open(char *F, char *T)
 {
-    Logger("File");
     FILE *file = fopen(F, T);
-
-    // Check if the file was successfully opened
-    if (file == NULL)
-    {
-        Error("Error opening file!");
-    }
-
     return file;
 }
 
 void Write(FILE *F, unsigned char *D)
 {
     fwrite(D, sizeof(unsigned char), strlen((char *)D), F);
+}
+
+void Puts(FILE *F, unsigned char *D)
+{
+    fputs(D, F);
 }
 
 char* Read(FILE *F)
@@ -35,3 +28,4 @@ char* Read(FILE *F)
 
     return data;
 }
+

@@ -8,6 +8,9 @@
         "errno.h": "c",
         "stdio.h": "c",
         "ws2tcpip.h": "c",
-        "stdlib.h": "c"
+        "stdlib.h": "c",
+        "world.c": "cpp",
+        "stdint.h": "c",
+        "in.h": "c"
     }
 }
