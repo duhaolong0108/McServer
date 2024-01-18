@@ -2,7 +2,7 @@
 echo 获取输入的文件路径
 set /p var=文件路径：
 echo 编译并生成可执行文件
-gcc "src/%var%" -o ./build/%var%.exe -lws2_32 -Ofast
+gcc -finput-charset=UTF-8 -fexec-charset=GBK "src/%var%" -o ./build/%var%.exe -lws2_32 -Ofast
 
 :: 检查 gcc 是否成功
 if errorlevel 1 (

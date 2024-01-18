@@ -8,18 +8,18 @@ def run_client():
     client_socket.settimeout(5.0)
 
     try:
-        # 连接到服务器
-        server_address = ('localhost', 1234)
+        server_address = ('localhost', 25565)
         client_socket.connect(server_address)
 
         print(f'Connected to {server_address[0]}:{server_address[1]}')
-
-        # 接收服务器消息
-        message = client_socket.recv(1024).decode('utf-8')
-        print(f'Received: {message}')
-
+        while True:
+            client_socket.send(bytes("Hello world","utf-8"))
+            # 接收服务器消息
+            message = client_socket.recv(1024).decode('utf-8')
+            print(f'Received: {message}')
+            import time
+            time.sleep(1)
         # 关闭套接字
-        client_socket.close()
 
     except (socket.timeout, ConnectionRefusedError):
         print('Connection refused or timed out.')

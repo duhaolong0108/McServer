@@ -11,7 +11,7 @@
 
 #define MAX_CONNECTIONS 10
 
-int emit = 0;
+int emit = 1;
 
 // 数据结构来存储客户端信息
 typedef struct client_info {
@@ -23,25 +23,25 @@ typedef struct client_info {
 // 线程回调函数
 DWORD WINAPI process_client(LPVOID arg) {
     client_info *client = (client_info *)arg;
-
-    char buffer[1024];
-    int bytes_received = recv(client->clnt_sock, buffer, sizeof(buffer), 0);
-    if (bytes_received > 0) {
-        printf("Received from client: %.*s\n", bytes_received, buffer);
-    } else {
-        perror("recv failed");
-    }
-
-    // 发送回应给客户端
-    const char *response = "Hello from the server!";
-    send(client->clnt_sock, response, strlen(response), 0);
-
-    // 关闭套接字
-    closesocket(client->clnt_sock);
-
-    free(client);
-
+	while (emit){
+		char buffer[1024];
+		int bytes_received = recv(client->clnt_sock, buffer, sizeof(buffer), 0);
+		if (bytes_received > 0) {
+			Send(client,"114514");
+		}
+		bzero(buffer,1024);
+	}
+	Close(client);
     return 0;
+}
+
+void Close(client_info *client){
+	closesocket(client->clnt_sock);
+    free(client);
+}
+
+void Send(client_info *client, const char *response){ // 格式： client / Recv
+	send(client->clnt_sock, response, strlen(response), 0);
 }
 
 int Server(int host) {
@@ -85,7 +85,7 @@ int Server(int host) {
         exit(EXIT_FAILURE);
     }
 
-    printf("Server is listening on port 1234...\n");
+    printf("Server is listening on port 1234...");
 
     HANDLE client_threads[MAX_CONNECTIONS];
     DWORD thread_ids[MAX_CONNECTIONS];
@@ -101,7 +101,7 @@ int Server(int host) {
             perror("accept failed");
             continue;
         }
-
+		
         // 创建线程来处理客户端请求
         client_info *client = malloc(sizeof(client_info));
         client->clnt_sock = clnt_sock;
@@ -126,7 +126,6 @@ int Server(int host) {
     return 0;
 }
 
-int Stop(){
-    emit = 1;
-    return 0;
+void Stop(){
+    emit = 0;
 }
