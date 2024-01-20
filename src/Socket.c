@@ -1,15 +1,12 @@
 #include "in.h"
 
-typedef struct client_info
-{
-    SOCKET clnt_sock;
-    struct sockaddr_in clnt_addr;
-    int clnt_addr_len;
-} client_info;
 
-int Handle(client_info *client, short *D)
+void Split(client_info *client, short *D)
 {
     // https://wiki.vg/Protocol
+    short VERSION = 765;
+    // S => Start
+    (return 1);
 }
 
 int emit = 1;
@@ -31,8 +28,8 @@ DWORD WINAPI process_client(LPVOID arg)
     client_info *client = (client_info *)arg;
     while (emit)
     {
-        short buffer[1024];
-        recv(client->clnt_sock, (char *)buffer, sizeof(buffer), 0) && Handle(client, buffer);
+        short buffer[1024], c;
+        recv(client->clnt_sock, (char *)buffer, sizeof(buffer), 0) && Split(client, buffer);
         memset(buffer, 0, 1024);
     }
     Close(client);
