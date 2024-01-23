@@ -13,10 +13,8 @@ def run_client():
 
         print(f'Connected to {server_address[0]}:{server_address[1]}')
         while True:
-            client_socket.send(bytes("Hello world","utf-8"))
+            client_socket.send(b'\x7f')
             # 接收服务器消息
-            message = client_socket.recv(1024).decode('utf-8')
-            print(f'Received: {message}')
             import time
             time.sleep(1)
         # 关闭套接字
