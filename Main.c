@@ -1,7 +1,13 @@
-#ifndef Socket
-#define Socket
+#include <stdio.h>
+#include "time.h"
+#include "math.h"
+#include <winsock2.h>
 
-#include "in.h"
+#pragma comment(lib, "ws2_32.lib")
+
+#define Info(T, D) cout("\033[0m", "INFO", T, D)
+#define Warn(T, D) cout("\033[33m", "WARN", T, D)
+#define Error(T, D) cout("\033[31m", "ERROR", T, D)
 
 #define MSB 0x80
 #define REST 0x7F
@@ -11,11 +17,32 @@
 #define Send(client, D) send(client->clnt_sock, (char *)D, strlen((char *)D), 0)
 #define Recv(client, l, CHAR) recv(client->clnt_sock, (char *)CHAR, l, 0)
 #define Len(D) strlen((char *)D)
+#define uc unsigned char
 
-unsigned char *encode(unsigned int num, client_info *client)
+typedef struct client_info
+{
+    SOCKET clnt_sock;
+    struct sockaddr_in clnt_addr;
+    int clnt_addr_len;
+    int num;
+} client_info;
+
+void cout(char *C, char *F, char *T, char *D)
+{
+    time_t rawtime;
+    struct tm *info;
+
+    time(&rawtime);
+    info = localtime(&rawtime);
+    printf("%s[%02d:%02d:%02d] [%s/%s] %s\n\033[0m", C, info->tm_hour, info->tm_min, info->tm_sec, T, F, D);
+}
+
+char f[30];
+
+uc *encode(int num, client_info *client)
 {
     short offset = 0;
-    unsigned char *out = (unsigned char *)malloc(sizeof(unsigned char));
+    uc *out = (uc *)malloc(sizeof(uc));
     while (num >= 0x80)
     {
         out[offset++] = (char)((num & 0xff) | 0x80);
@@ -29,13 +56,10 @@ unsigned char *encode(unsigned int num, client_info *client)
 DWORD WINAPI process_client(LPVOID arg)
 {
     client_info *client = (client_info *)arg;
-    unsigned char r[1024],
-        *wd = (unsigned char *)malloc(sizeof(unsigned char));
+    uc r[1024],
+        *wd = (uc *)malloc(sizeof(uc));
     short postion = 0;
     int res = 0, t;
-    char f[30];
-    snprintf(f, 23, "Server Thread %d", client->num);
-    Info(f, "Open!");
     while (Recv(client, 1, r))
     {
         wd[postion++] = r[0];
@@ -45,10 +69,7 @@ DWORD WINAPI process_client(LPVOID arg)
 
             if (wd[0] == 0x00 && wd[t - 1] == 0x01)
             {
-                // 两个Varint 9;
                 int Data_len = 0;
-                snprintf(f, 23, "Server Thread %d", client->num);
-                Info(f, "Ping!");
             }
         }
         else if (r[0] < 128 && !res)
@@ -56,7 +77,7 @@ DWORD WINAPI process_client(LPVOID arg)
             int offset = 0;
             int shift = 0;
             int counter = offset;
-            unsigned char b;
+            uc b;
             postion = 0;
             do
             {
@@ -75,18 +96,18 @@ DWORD WINAPI process_client(LPVOID arg)
         }
     }
     Close(client);
-    snprintf(f, 23, "Server Thread %d", client->num);
-    Info(f, "Close!");
     return 0;
 }
 
-void Server(short port, short MAX_CONNECTIONS)
+int main()
 {
+    short port = 25565;
+    short MAX_CONNECTIONS = 10;
     WSADATA wsa_data;
     if (WSAStartup(MAKEWORD(2, 2), &wsa_data))
     {
         Error("Server", "WSAStartup failed");
-        return;
+        return 1;
     }
 
     SOCKET serv_sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -94,7 +115,7 @@ void Server(short port, short MAX_CONNECTIONS)
     {
         Error("Server", "socket failed");
         WSACleanup();
-        return;
+        return 1;
     }
 
     int optval = 1;
@@ -110,14 +131,14 @@ void Server(short port, short MAX_CONNECTIONS)
     {
         Error("Server", "bind failed");
         S_Close(serv_sock);
-        return;
+        return 1;
     }
 
     if (listen(serv_sock, MAX_CONNECTIONS) == SOCKET_ERROR)
     {
         Error("Server", "listen failed");
         S_Close(serv_sock);
-        return;
+        return 1;
     }
 
     char t[37];
@@ -126,7 +147,7 @@ void Server(short port, short MAX_CONNECTIONS)
 
     HANDLE client_threads[MAX_CONNECTIONS];
     DWORD thread_ids[MAX_CONNECTIONS];
-    int i = 0;
+    long long i = 0;
 
     while (1)
     {
@@ -163,4 +184,3 @@ void Server(short port, short MAX_CONNECTIONS)
     // 关闭服务器套接字
     S_Close(serv_sock);
 }
-#endif

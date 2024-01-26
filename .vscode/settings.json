@@ -4,6 +4,7 @@
         "*.html": "html",
         "in.h": "c",
         "tool.h": "c",
-        "stdio.h": "c"
+        "stdio.h": "c",
+        "math.h": "c"
     }
 }
