@@ -15,6 +15,8 @@ typedef struct client_info
     int clnt_addr_len;
 } client_info;
 
+#define Cand(A, B) strcpy((char *)A, (const char *)B)
+
 #include "Tool.h"
 #include "Logger.h"
 #include "Socket.h"

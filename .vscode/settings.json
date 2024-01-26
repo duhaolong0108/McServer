@@ -2,16 +2,8 @@
     "files.associations": {
         "*.svg": "html",
         "*.html": "html",
-        "winsock2.h": "c",
-        "string.h": "c",
-        "errno.h": "c",
-        "stdio.h": "c",
-        "ws2tcpip.h": "c",
-        "stdlib.h": "c",
-        "world.c": "cpp",
-        "stdint.h": "c",
         "in.h": "c",
-        "a": "c",
-        "d": "c"
+        "tool.h": "c",
+        "stdio.h": "c"
     }
 }

@@ -3,13 +3,29 @@
 
 #include "in.h"
 
+#define MSB 0x80
+#define REST 0x7F
+
 #define Close(A) (closesocket(A->clnt_sock), free(A))
 #define S_Close(A) (closesocket(A), WSACleanup())
 #define Send(client, D) send(client->clnt_sock, (char *)D, strlen((char *)D), 0)
 #define Recv(client, l, CHAR) recv(client->clnt_sock, (char *)CHAR, l, 0)
+#define Len(D) strlen((char *)D)
+#define G_l(D) D[Len(D) - 1]
 
-#define MSB 0x80
-#define REST 0x7F
+unsigned char *encode(unsigned int num, client_info *client)
+{
+    short offset = 0;
+    unsigned char *out = malloc(sizeof(unsigned char));
+    while (num >= 0x80)
+    {
+        out[offset++] = (char)((num & 0xff) | 0x80);
+        num >>= 7;
+    }
+
+    out[offset++] = (char)(num);
+    return out;
+}
 
 DWORD WINAPI process_client(LPVOID arg)
 {
@@ -17,15 +33,19 @@ DWORD WINAPI process_client(LPVOID arg)
     unsigned char r[1024],
         *wd = (unsigned char *)malloc(sizeof(unsigned char));
     short postion = 0;
-    int res = 0,t;
+    int res = 0, t;
     while (Recv(client, 1, r))
     {
         wd[postion++] = r[0];
-        if(res && !(--res)){
+        if (res && !(--res))
+        {
             postion = 0;
 
-            for(int i=0;i<t;i++) printf("%d ",(int)wd[i]);
-            printf("\n");
+            if(wd[0] == 0x01 && G_l(wd) == 0x01){
+                // 两个Varint 9;
+                int Data_len = 0;
+            }
+
             continue;
         }
         if (r[0] < 128 && !res)
@@ -39,7 +59,7 @@ DWORD WINAPI process_client(LPVOID arg)
             {
                 if (counter >= 3)
                 {
-                    printf("Could not decode varint\n");
+                    Error("Server", "Could not decode varint\n");
                     return 0;
                 }
                 b = wd[counter++];
