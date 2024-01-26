@@ -12,44 +12,47 @@
 #define MSB 0x80
 #define REST 0x7F
 
+#define _c char
+#define uc unsigned _c
+#define it int
+#define sh short
 #define Close(A) (closesocket(A->clnt_sock), free(A))
 #define S_Close(A) (closesocket(A), WSACleanup())
-#define Send(client, D) send(client->clnt_sock, (char *)D, strlen((char *)D), 0)
-#define Recv(client, l, CHAR) recv(client->clnt_sock, (char *)CHAR, l, 0)
-#define Len(D) strlen((char *)D)
-#define uc unsigned char
+#define Send(client, D) send(client->clnt_sock, (_c *)D, strlen((_c *)D), 0)
+#define Recv(client, l, CHAR) recv(client->clnt_sock, (_c *)CHAR, l, 0)
+#define Len(D) strlen((_c *)D)
 
 typedef struct client_info
 {
     SOCKET clnt_sock;
     struct sockaddr_in clnt_addr;
-    int clnt_addr_len;
-    int num;
+    it clnt_addr_len;
+    it num;
 } client_info;
 
-void cout(char *C, char *F, char *T, char *D)
+void cout(_c *C, _c *F, _c *T, _c *D)
 {
     time_t rawtime;
     struct tm *info;
 
     time(&rawtime);
     info = localtime(&rawtime);
-    printf("%s[%02d:%02d:%02d] [%s/%s] %s\n\033[0m", C, info->tm_hour, info->tm_min, info->tm_sec, T, F, D);
+    pritf("%s[%02d:%02d:%02d] [%s/%s] %s\n\033[0m", C, info->tm_hour, info->tm_min, info->tm_sec, T, F, D);
 }
 
-char f[30];
+_c f[30];
 
-uc *encode(int num, client_info *client)
+uc *encode(it num, client_info *client)
 {
-    short offset = 0;
+    sh offset = 0;
     uc *out = (uc *)malloc(sizeof(uc));
     while (num >= 0x80)
     {
-        out[offset++] = (char)((num & 0xff) | 0x80);
+        out[offset++] = (_c)((num & 0xff) | 0x80);
         num >>= 7;
     }
 
-    out[offset++] = (char)(num);
+    out[offset++] = (_c)(num);
     return out;
 }
 
@@ -58,8 +61,8 @@ DWORD WINAPI process_client(LPVOID arg)
     client_info *client = (client_info *)arg;
     uc r[1024],
         *wd = (uc *)malloc(sizeof(uc));
-    short postion = 0;
-    int res = 0, t;
+    sh postion = 0;
+    it res = 0, t;
     while (Recv(client, 1, r))
     {
         wd[postion++] = r[0];
@@ -69,21 +72,21 @@ DWORD WINAPI process_client(LPVOID arg)
 
             if (wd[0] == 0x00 && wd[t - 1] == 0x01)
             {
-                int Data_len = 0;
+                it Data_len = 0;
             }
         }
         else if (r[0] < 128 && !res)
         {
-            int offset = 0;
-            int shift = 0;
-            int counter = offset;
+            it offset = 0;
+            it shift = 0;
+            it counter = offset;
             uc b;
             postion = 0;
             do
             {
                 if (counter >= 3)
                 {
-                    Error("Server", "Could not decode varint\n");
+                    Error("Server", "Could not decode varit\n");
                     break;
                 }
                 b = wd[counter++];
@@ -99,10 +102,10 @@ DWORD WINAPI process_client(LPVOID arg)
     return 0;
 }
 
-int main()
+it main()
 {
-    short port = 25565;
-    short MAX_CONNECTIONS = 10;
+    sh port = 25565;
+    sh MAX_CONNECTIONS = 10;
     WSADATA wsa_data;
     if (WSAStartup(MAKEWORD(2, 2), &wsa_data))
     {
@@ -118,8 +121,8 @@ int main()
         return 1;
     }
 
-    int optval = 1;
-    setsockopt(serv_sock, SOL_SOCKET, SO_REUSEADDR, (const char *)&optval, sizeof(optval));
+    it optval = 1;
+    setsockopt(serv_sock, SOL_SOCKET, SO_REUSEADDR, (const _c *)&optval, sizeof(optval));
 
     struct sockaddr_in serv_addr;
     memset(&serv_addr, 0, sizeof(serv_addr));
@@ -141,19 +144,19 @@ int main()
         return 1;
     }
 
-    char t[37];
-    snprintf(t, 37, "Server is listening on port %d", port);
+    _c t[37];
+    snpritf(t, 37, "Server is listening on port %d", port);
     Info("Server", t);
 
     HANDLE client_threads[MAX_CONNECTIONS];
     DWORD thread_ids[MAX_CONNECTIONS];
-    long long i = 0;
+    unsigned it i = 0;
 
     while (1)
     {
         // 接收客户端请求
         struct sockaddr_in clnt_addr;
-        int clnt_addr_len = sizeof(clnt_addr);
+        it clnt_addr_len = sizeof(clnt_addr);
 
         SOCKET clnt_sock = accept(serv_sock, (SOCKADDR *)&clnt_addr, &clnt_addr_len);
         if (clnt_sock == INVALID_SOCKET)
