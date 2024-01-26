@@ -13,10 +13,8 @@ def run_client():
 
         print(f'Connected to {server_address[0]}:{server_address[1]}')
         while True:
-            client_socket.send(b'\x7f')
+            client_socket.send(b'\x01\x26\x25')
             # 接收服务器消息
-            import time
-            time.sleep(1)
         # 关闭套接字
 
     except (socket.timeout, ConnectionRefusedError):
