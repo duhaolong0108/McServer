@@ -5,6 +5,7 @@
         "in.h": "c",
         "tool.h": "c",
         "stdio.h": "c",
-        "math.h": "c"
+        "math.h": "c",
+        "winsock2.h": "c"
     }
 }

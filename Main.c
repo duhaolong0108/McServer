@@ -32,27 +32,26 @@ typedef struct client_info
 
 void cout(_c *C, _c *F, _c *T, _c *D)
 {
-    time_t rawtime;
+    long rawtime;
     struct tm *info;
-
     time(&rawtime);
     info = localtime(&rawtime);
-    pritf("%s[%02d:%02d:%02d] [%s/%s] %s\n\033[0m", C, info->tm_hour, info->tm_min, info->tm_sec, T, F, D);
+    printf("%s[%02d:%02d:%02d] [%s/%s] %s\n\033[0m", C, info->tm_hour, info->tm_min, info->tm_sec, T, F, D);
 }
 
-_c f[30];
+_c G[1024];
 
 uc *encode(it num, client_info *client)
 {
     sh offset = 0;
     uc *out = (uc *)malloc(sizeof(uc));
-    while (num >= 0x80)
+    while (num > REST)
     {
-        out[offset++] = (_c)((num & 0xff) | 0x80);
+        out[offset++] = (uc)((num & 0xff) | MSB);
         num >>= 7;
     }
 
-    out[offset++] = (_c)(num);
+    out[offset++] = (uc)(num);
     return out;
 }
 
@@ -84,7 +83,7 @@ DWORD WINAPI process_client(LPVOID arg)
             postion = 0;
             do
             {
-                if (counter >= 3)
+                if (counter > 2)
                 {
                     Error("Server", "Could not decode varit\n");
                     break;
@@ -144,9 +143,8 @@ it main()
         return 1;
     }
 
-    _c t[37];
-    snpritf(t, 37, "Server is listening on port %d", port);
-    Info("Server", t);
+    snprintf(G, 37, "Server is listening on port %d", port);
+    Info("Server", G);
 
     HANDLE client_threads[MAX_CONNECTIONS];
     DWORD thread_ids[MAX_CONNECTIONS];
@@ -154,7 +152,6 @@ it main()
 
     while (1)
     {
-        // 接收客户端请求
         struct sockaddr_in clnt_addr;
         it clnt_addr_len = sizeof(clnt_addr);
 
@@ -165,7 +162,6 @@ it main()
             continue;
         }
 
-        // 创建线程来处理客户端请求
         client_info *client = (client_info *)malloc(sizeof(client_info));
         client->clnt_sock = clnt_sock;
         client->clnt_addr = clnt_addr;
@@ -173,17 +169,13 @@ it main()
         client->num = i;
 
         client_threads[i] = CreateThread(NULL, 0, process_client, client, 0, &thread_ids[i]);
-        if (!client_threads[i])
+        if (!client_threads[i++])
         {
             Error("Server", "CreateThread failed");
             closesocket(clnt_sock);
             free(client);
             continue;
         }
-
-        i++;
     }
-
-    // 关闭服务器套接字
     S_Close(serv_sock);
 }
