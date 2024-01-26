@@ -13,6 +13,7 @@ typedef struct client_info
     SOCKET clnt_sock;
     struct sockaddr_in clnt_addr;
     int clnt_addr_len;
+    int num;
 } client_info;
 
 #define Cand(A, B) strcpy((char *)A, (const char *)B)

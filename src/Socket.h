@@ -11,12 +11,11 @@
 #define Send(client, D) send(client->clnt_sock, (char *)D, strlen((char *)D), 0)
 #define Recv(client, l, CHAR) recv(client->clnt_sock, (char *)CHAR, l, 0)
 #define Len(D) strlen((char *)D)
-#define G_l(D) D[Len(D) - 1]
 
 unsigned char *encode(unsigned int num, client_info *client)
 {
     short offset = 0;
-    unsigned char *out = malloc(sizeof(unsigned char));
+    unsigned char *out = (unsigned char *)malloc(sizeof(unsigned char));
     while (num >= 0x80)
     {
         out[offset++] = (char)((num & 0xff) | 0x80);
@@ -34,6 +33,9 @@ DWORD WINAPI process_client(LPVOID arg)
         *wd = (unsigned char *)malloc(sizeof(unsigned char));
     short postion = 0;
     int res = 0, t;
+    char f[30];
+    snprintf(f, 23, "Server Thread %d", client->num);
+    Info(f, "Open!");
     while (Recv(client, 1, r))
     {
         wd[postion++] = r[0];
@@ -41,14 +43,15 @@ DWORD WINAPI process_client(LPVOID arg)
         {
             postion = 0;
 
-            if(wd[0] == 0x01 && G_l(wd) == 0x01){
+            if (wd[0] == 0x00 && wd[t - 1] == 0x01)
+            {
                 // 两个Varint 9;
                 int Data_len = 0;
+                snprintf(f, 23, "Server Thread %d", client->num);
+                Info(f, "Ping!");
             }
-
-            continue;
         }
-        if (r[0] < 128 && !res)
+        else if (r[0] < 128 && !res)
         {
             int offset = 0;
             int shift = 0;
@@ -60,7 +63,7 @@ DWORD WINAPI process_client(LPVOID arg)
                 if (counter >= 3)
                 {
                     Error("Server", "Could not decode varint\n");
-                    return 0;
+                    break;
                 }
                 b = wd[counter++];
                 res += shift < 21
@@ -69,16 +72,16 @@ DWORD WINAPI process_client(LPVOID arg)
                 shift += 7;
             } while (b >= MSB);
             t = res;
-            continue;
         }
     }
     Close(client);
+    snprintf(f, 23, "Server Thread %d", client->num);
+    Info(f, "Close!");
     return 0;
 }
 
 void Server(short port, short MAX_CONNECTIONS)
 {
-
     WSADATA wsa_data;
     if (WSAStartup(MAKEWORD(2, 2), &wsa_data))
     {
@@ -143,6 +146,7 @@ void Server(short port, short MAX_CONNECTIONS)
         client->clnt_sock = clnt_sock;
         client->clnt_addr = clnt_addr;
         client->clnt_addr_len = clnt_addr_len;
+        client->num = i;
 
         client_threads[i] = CreateThread(NULL, 0, process_client, client, 0, &thread_ids[i]);
         if (!client_threads[i])
